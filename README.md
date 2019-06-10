@@ -193,9 +193,7 @@ _The screenshots in this section are cropped from the same overview state, found
 
   - Be sure to be familiar with the [`PastChallenge`](#PastChallenge) and [`ListingSnapshot`](#ListingSnapshot) types.
   - Past challenges are stored and loaded separately from the primary `gov` properites (`proposals`, `challenges`, and `validators`) and are not updated in real time.
-
     - Instead, past challenges must be loaded by calling [`gov.getHistoricalChallenges()`](#govgethistoricalchallenges--promisearraypastchallenge):
-
       ```javascript
       // following requires `gov.init()` to have completed successfully
       const pastChallenges = await gov.getHistoricalChallenges();
@@ -203,7 +201,6 @@ _The screenshots in this section are cropped from the same overview state, found
       // the number of challenges (use index +1 to display under "ID")
       console.log(pastChallenges.length);
       ```
-
 - The "Past Challenges" table has the following column headers:
   - **ID** is the challenge's unique ID, which increments from 0.
   - **Challenger** is the Ethereum address of the entity that initiated the challenge.
@@ -212,7 +209,6 @@ _The screenshots in this section are cropped from the same overview state, found
   - **Tokens at Stake** is the total number of tokens at stake during the challenge, equal to the challenge stake plus the listing owner's stake (see below).
   - **Time** indicates the time a given challenge ended (vote period ends).
 - For each table entry (loaded from the array returned by [`gov.getHistoricalChallenges()`](#govgethistoricalchallenges-⇒-promisearraypastchallenge)) and each column field above:
-
   - **ID** can be loaded from `challenge.listingSnapshot.currentChallenge` or can be loaded from the challenge's index within the array returned by `getHistoricalChallenges`.
   - **Challenger** should be loaded from `challenge.challenger` (an Ethereum address).
   - **Type** is computed based on `challenge.listingSnapshot.status` based on the following:
@@ -225,7 +221,6 @@ _The screenshots in this section are cropped from the same overview state, found
   - **Tokens at Stake** should be computed as the sum of `challenge.balance` and `challenge.listingSnapshot.stakedBalance` and displayed in units of ether.
     - Keep in mind both `challenge.balance` and `challenge.listingSnapshot.stakedBalance` are `BigNumber` instances, and stored in units of wei which must be converted prior to displaying.
   - **Time** should be calculated based on the timestamp of the `challenge.challengeEnd` block number.
-
     - This timestamp can be loaded from the [`gov.getPastBlockTimestamp(n)`](#govgetpastblocktimestampblocknumber--promisenumber) method, where `n` is passed in as `challenge.challengeEnd`.
     - For example:
 
@@ -241,8 +236,7 @@ _The screenshots in this section are cropped from the same overview state, found
         );
       }
       ```
-
-- Clicking on a challenge should take to a past challenge detail page for that challenge (discused in a later section).
+- Clicking on a challenge should take to a past challenge detail page for that challenge (discussed in a later section).
 
 # Documentation
 
@@ -313,6 +307,8 @@ access the objects directly with <code>gov.listings</code>, etc.</p>
     - [.estimateFutureBlockTimestamp(blockNumber)](#Gov+estimateFutureBlockTimestamp) ⇒ <code>Promise.&lt;number&gt;</code>
     - [.getPastBlockTimestamp(blockNumber)](#Gov+getPastBlockTimestamp) ⇒ <code>Promise.&lt;number&gt;</code>
     - [.getHistoricalChallenges()](#Gov+getHistoricalChallenges) ⇒ <code>Promise.&lt;Array.&lt;PastChallenge&gt;&gt;</code>
+    - [.getChallengeInfo(challengeId)](#Gov+getChallengeInfo) ⇒ <code>Promise.&lt;ChallengeInfo&gt;</code>
+    - [.currentBlockNumber()](#Gov+currentBlockNumber) ⇒ <code>number</code>
   - _static_
     - [.ZERO](#Gov.ZERO)
     - [.ONE](#Gov.ONE)
@@ -346,15 +342,15 @@ be called early-on in the page life-cycle.</p>
 <li>load and process the latest ValidatorRegistry state</li>
 </ul>
 
-**Kind**: instance method of [<code>Gov</code>](#Gov)
+**Kind**: instance method of [<code>Gov</code>](#Gov)  
 <a name="Gov+currentProposals"></a>
 
 ### gov.currentProposals() ⇒ [<code>Map.&lt;Proposal&gt;</code>](#Proposal)
 
 <p>Load the current proposal map from state.</p>
 
-**Kind**: instance method of [<code>Gov</code>](#Gov)
-**Returns**: [<code>Map.&lt;Proposal&gt;</code>](#Proposal) - <p>a map where the key is the listing public key, and the value is a proposal object</p>
+**Kind**: instance method of [<code>Gov</code>](#Gov)  
+**Returns**: [<code>Map.&lt;Proposal&gt;</code>](#Proposal) - <p>a map where the key is the listing public key, and the value is a proposal object</p>  
 **Example**
 
 ```javascript
@@ -490,6 +486,46 @@ section.</p>
 
 **Kind**: instance method of [<code>Gov</code>](#Gov)  
 **Returns**: <code>Promise.&lt;Array.&lt;PastChallenge&gt;&gt;</code> - <p>all historical <code>challenges</code>.</p>  
+<a name="Gov+getChallengeInfo"></a>
+
+### gov.getChallengeInfo(challengeId) ⇒ <code>Promise.&lt;ChallengeInfo&gt;</code>
+
+<p>Returns an object with the block numbers of important times for a given
+challenge. Between <code>challengeStart</code> and <code>endCommitPeriod</code>, votes may be
+committed (submitted) to the challenge.</p>
+<p>Between <code>endCommitPeriod</code> and <code>challengeEnd</code>, votes may be revealed with
+the same salt and vote value.</p>
+
+**Kind**: instance method of [<code>Gov</code>](#Gov)  
+**Returns**: <code>Promise.&lt;ChallengeInfo&gt;</code> - <p>the block numbers for this challenge</p>
+
+| Param       | Type                                                                 | Description                             |
+| ----------- | -------------------------------------------------------------------- | --------------------------------------- |
+| challengeId | <code>string</code> \| <code>number</code> \| <code>BigNumber</code> | <p>the ID of the challenge to query</p> |
+
+**Example**
+
+```javascript
+const info = await gov.getChallengeInfo(new BigNumber(1));
+const currentBlock = await gov.currentBlockNumber();
+
+if (currentBlock < endCommitPeriod && currentBlock >= challengeStart) {
+  // in "commit" period; voters may submit votes
+} else if (currentBlock >= endCommitPeriod && currentBlock <= challengeEnd) {
+  // in "reveal" period; voters may reveal votes
+} else {
+  // challenge has ended (or issues with block numbers)
+}
+```
+
+<a name="Gov+currentBlockNumber"></a>
+
+### gov.currentBlockNumber() ⇒ <code>number</code>
+
+<p>Returns the current block height (as a number).</p>
+
+**Kind**: instance method of [<code>Gov</code>](#Gov)  
+**Returns**: <code>number</code> - <p>The current (or most recent) Ethereum block height.</p>  
 <a name="Gov.ZERO"></a>
 
 ### Gov.ZERO
@@ -572,6 +608,7 @@ section.</p>
 | challengeId      | <code>BigNumber</code> | <p>the incremental ID of the current challenge</p>                                                                      |
 | challengerStake  | <code>BigNumber</code> | <p>the staked balance of the challenger</p>                                                                             |
 | challengeEndUnix | <code>number</code>    | <p>the estimated unix timestamp the challenge ends at</p>                                                               |
+| challengeEnd     | <code>BigNumber</code> | <p>the block at which the challenge reveal period ends</p>                                                              |
 | totalTokens      | <code>BigNumber</code> | <p>if finalized, the total number of tokens from participating voters</p>                                               |
 | winningTokens    | <code>BigNumber</code> | <p>if finalized, the number of tokens that voted on the winning side</p>                                                |
 | result           | <code>string</code>    | <p>the final result of the challenge; &quot;passed&quot;, &quot;failed&quot;, or <code>null</code> if not finalized</p> |
