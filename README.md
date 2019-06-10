@@ -48,7 +48,7 @@ All three properties above are loaded from the current contract system state whe
 
 All sateful data (challenges, proposals, validators, past challenges, etc.) for the governance portal is loaded from the Ethereum blockchain, through the MetaMask extension which provides access to a remote Ethereum node.
 
-As such, _this portal is useless without MetaMask_ and MetaMask must be connected (via a call to `ethereum.enable()`) prior to any data being displayed.
+As such, _this portal is useless without MetaMask,_ and MetaMask must be connected (via a call to `ethereum.enable()`) prior to any data being displayed. The actual call to `ethereum.enable()` is handled by initialization of a `Gov` instance (described below).
 
 This brings up a few points to note:
 
@@ -58,16 +58,45 @@ This brings up a few points to note:
 
 _More details on `gov` initialization are included in the description and documentation sections._
 
+## Wei vs. Ether
+
+Most token values (stake size, reward rate, etc.) are showed in "base units" of the token, which are also refereed to as `wei`, the smallest unit of most ERC-20 tokens. Becuase wei amounts will have between ~17-23 digits, amounts should be converted to ether prior to being displayed to the user.
+
+A `gov` instance provides [`gov.weiToEther(wei)`](#govweitoetherwei--string) to convert from wei, and [`gov.etherToWei(ether)`](#govethertoweiether--string) to convert the other direction.
+
+_These values are returned as strings, and should be converted to `BigNumber` instances where necessary. The static method `Gov.BigNumber` may be used to create new `BigNumber` instances from strings._
+
 # Description
 
 This section contains the "meat" of the specification, with diagrams from [the sketch file](./governance.sketch) and annotations
 
-## Overview
+## Main page (pre-MetaMask connection)
 
 ![Main page/overview state](#) <!-- https://sketch.cloud/s/VvZQ8/a/R4ZbmW -->
 
 - This is the home/index page of the governance portal, which should be displayed prior to MetaMask connection
-- The "Connect to MetaMask" button in the top-left nav-bar should trigger a call to [`gov.init()`](#govinit) which will prompt the user to allow the site access to their MetaMask `coinbase` account.
+- The "Connect to MetaMask" button in the top-right nav-bar should trigger a call to [`gov.init()`](#govinit) which will prompt the user to allow the site access to their MetaMask `coinbase` account.
+
+## Main page (post-MetaMask connection)
+
+- After a successful (no exceptions) call to [`gov.init()`](#govinit), data for the main page can be loaded.
+- After initialization, the `gov` instance will begin to load validators, challenges, and proposals, into its state.
+- Each time a new proposal, challenge, or validator is loaded, the `gov_update` event will be emitted from `gov.ee`.
+- The raw map (object) for each of the following sections can then be loaded from the `gov` instance.
+  - **Active proposals** should be loaded from `gov.proposals` (either by directly viewing that object, or a call to [`gov.currentProposals()`](#govcurrentproposals--mapproposal)).
+    - Be sure to see the [`Proposal` type definition](#proposal) as well.
+    - Proposals on the main page display several values, which can be loaded (or computed) from each proposal object.
+    - The number ("#12", "#11", etc.) is not directly included in each `gov.proposals` property, but can be displayed based on the index of each (index of the keys).
+    - The "new proposal" or "ending soon" badges should be displayed based on the `proposal.acceptUnix` field
+      - If `acceptUnix` is within one day of the current timestamp, "ending soon" should be displayed on the listing.
+      - If `acceptUnix` is more than one week in the future, "new proposal" should be displayed on the listing.
+    - The title for a proposal is "Entity `x` wants to become a validator," and the `x` should be replaced with a shortened hex-string of the `proposal.owner` Ethereum address (`0x23ba...d2f`, for example).
+    - The "Stake size" field should be loaded from `proposal.stakeSize`, and should be converted to units of ether prior to being displayed.
+    - The "Daily reward" field should be loaded from `proposal.dailyReward` and should be converted to units of ether period to being displayed. Decimals can be truncated after 6-8 significant digits.
+    - The "Estimated vote power" field should be loaded from `proposal.power`, which is a decimal number from 0-100 indicating a percentage of network vote power. The decimals can be truncated after a few significant digits, based on aesthetics/spacing.
+    - The "Proposal ends in:" field must be computed based on the `proposal.acceptUnix` field, which indicates the Unix timestamp at which the proposal is confirmed. I recommend constructing a `Date` object from the timestamp, and using its methods to compute days, hours, and minutes. Seconds should not be shown, as the timestamp is purely an estimate.
+  - **Active challenges** should be loaded from `gov.challenges` (either by directly viewing that object, or a call to [`gov.currentChallenges()`](#govcurrentchallenges--mapstorechallenge)).
+    - Be sure to see the [`StoreChallenge` type definition](#storechallenge) as well.
 
 # Documentation
 
