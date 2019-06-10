@@ -236,6 +236,32 @@ _The screenshots in this section are cropped from the same overview state, found
       ```
 - Clicking on a challenge should take to a past challenge detail page for that challenge (discussed in a later section).
 
+## Proposal detail page
+- Clicking on a proposal from the main page directs the user to the proposal detail page (below).
+- On the proposal detail page, the user can be prompted to challenge the proposal.
+- In addition to the screenshots below, be sure to see [the mobile version](./images/gov-proposal-page-mobile.png), and the full sketch file.
+
+### Main detail
+
+![Proposal detail page: main](./images/gov-proposal-page.png) <!-- https://sketch.cloud/s/VvZQ8/a/wpmj8p -->
+
+- This is the primary detail page for active proposals.
+- The majority of the data for this page can be loaded from the corresponding `gov.proposals` object.
+- Each detail page should correspond to one of the objects in `gov.proposals`, where each `proposal` is key'd by the listing's Tendermint public key.
+- Page features/fields:
+  - **Tendermint public key** (mid/top left) should correspond to the object property key of the current `gov.proposals` object.
+  - **`X` wants to become a validator** the value for `X` (Ethereum address) should be loaded from `proposal.owner`.
+  - **If unchallenged...** the countdown to when the proposal becomes a validator should be computed based on the `proposal.acceptUnix` and should be displayed as a countdown of days, hours, and minutes (seconds should be ignored due to `acceptUnix` being an estimate).
+  - Card: **Stake size** should be loaded from `proposal.stakeSize` (remember it is a `BigNumber`, and must be converted to ether prior to display).
+  - Card: **Daily reward** should be loaded from `proposal.dailyReward` (must be converted to ether prior to being displayed).
+  - Card: **Estimated vote power** should be loaded from `proposal.power` and displayed as a percentage, keeping in mind some digits should not be displayed (i.e. trailing decimals).
+  - Button: **Challenge proposal** triggers a change to the [next state](#challenge-prompt) and can ultimately lead to a call to initiate a challenge (see next sub-section).
+
+### Challenge prompt
+
+![Proposal detail page: challenge](./images/gov-proposal-challenge.png) <!-- https://sketch.cloud/s/VvZQ8/a/wpmj8p -->
+
+
 # Documentation
 
 - Below is the README for `@kosu/gov-portal-helper` package.
