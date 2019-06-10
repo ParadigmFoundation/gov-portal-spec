@@ -190,7 +190,6 @@ _The screenshots in this section are cropped from the same overview state, found
 ![Main page: validators table](./images/gov-past-challenges-table.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
 
 - **Past challenges** is a section containing a table with information about past challenges and the results of each.
-
   - Be sure to be familiar with the [`PastChallenge`](#PastChallenge) and [`ListingSnapshot`](#ListingSnapshot) types.
   - Past challenges are stored and loaded separately from the primary `gov` properites (`proposals`, `challenges`, and `validators`) and are not updated in real time.
     - Instead, past challenges must be loaded by calling [`gov.getHistoricalChallenges()`](#govgethistoricalchallenges--promisearraypastchallenge):
@@ -223,7 +222,6 @@ _The screenshots in this section are cropped from the same overview state, found
   - **Time** should be calculated based on the timestamp of the `challenge.challengeEnd` block number.
     - This timestamp can be loaded from the [`gov.getPastBlockTimestamp(n)`](#govgetpastblocktimestampblocknumber--promisenumber) method, where `n` is passed in as `challenge.challengeEnd`.
     - For example:
-
       ```javascript
       // gov.init() must have completed successfully prior to this working
       for (let i = 0; i < challenges.length; i++) {
