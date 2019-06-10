@@ -14,6 +14,7 @@ A custom helper library (`gov-portal-helper`) has been created to assist with th
 
 - Below is the README for `@kosu/gov-portal-helper` package.
 - The published package may be found [on the NPM registry](https://www.npmjs.com/package/@kosu/gov-portal-helper).
+- For safety from `number` precision issues, most numerical values are expected and returned as [`BigNumber`](https://github.com/MikeMcl/bignumber.js) instances, so be sure to be familiar with that API.
 
 ## `@kosu/gov-portal-helper`
 
