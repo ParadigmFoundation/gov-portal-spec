@@ -8,7 +8,7 @@ A custom helper library (`gov-portal-helper`) has been created to assist with th
 
 # Background
 
-Conceptual topics helpful for working with this project.
+Conceptual topics helpful for working with this project, beyond the assumed knowledge of basic Ethereum topics.
 
 ## Token curated registry
 
@@ -25,14 +25,55 @@ The resulting vote on the challenge ends either with the challenge passing, in w
 - **Proposal:** a new listing in the registry; a pending application to be a validator that is automatically confirmed after a period of time without being challenged.
 - **Validator:** not only an actual validator on the proof-of-stake Kosu network, but more commonly in this context refers to a listing that has been confirmed to the registry.
 - **Challenge:** an active poll against a listing (either a _proposal_ or a _challenge_) initiated by a token holder. A challenge resolves after a commit-reveal vote period, and results in distribution of the loser's (either the _challenger_ or the _listing_) stake to the winning voters and stakeholder (the _listing_ in the case of a failed challenge, or the _challenger_ in the case of a successful challenge).
+- **Challenger:** an entity who has initiated a challenge against a _proposal_ or a _validator_ listing (note that a challenger who's challenge fails looses their staked tokens to the winning voters and the listing owner).
+- **Voter:** an entity who is participating in a _challenge_ vote by committing their own tokens to one side of the poll (note, a voter may never loose their tokens if they vote on the losing side, they can only benefit if they win).
+- **Stake:** a term used to describe A) an amount of tokens that may be lost in certain outcomes, or B) the act of committing tokens into a _staked_ position.
+- **ValidatorRegistry:** the specific Ethereum contract that implements the functionality of this governance system within the greater Kosu protocol.
+
+## Governance portal helper state/event model
+
+The [`gov-portal-helper`](#documentation) library contains a single class, `Gov`, which manages and abstracts most functionality needed to interact with the Kosu system.
+
+The three main properties listed below (and in more detail in the [documentation](#documentation) section) should be used for the main page (discussed below) that lists "proposals", "validators", and "challenges". These objects may be directly read from the `Gov` prototype, loaded via prototype methods, or queried each time a `gov_update` event is emitted from the `gov.ee` event-emitter object.
+
+A `Gov` instance contains the following properties, which track the primary state of the portal system.
+
+- [`gov.validators`](#Gov+currentValidators) - a map of Tendermint public keys (as hex-encoded strings) to [`Validator`](#validator) objects, with one entry for each current validator within the registry.
+- [`gov.proposals`](#Gov+currentProposals) - a map of Tendermint public keys (as hex-encoded strings) to [`Proposal`](#proposal) objects, with one entry for each current pending proposal within the registry.
+- [`gov.challenges`](#Gov+currentChallenges) - a map of Tendermint public keys (as hex-encoded strings) to [`StoreChallenge`](#StoreChallenge) objects, with one entry for listing that is currently being challenged.
+
+All three properties above are loaded from the current contract system state when `gov.init()` is called, and further updated each time the contract system's state changes. After main page load, the `gov_update` event can be used to detect updates to the above state fields.
+
+## Reliance on MetaMask
+
+All sateful data (challenges, proposals, validators, past challenges, etc.) for the governance portal is loaded from the Ethereum blockchain, through the MetaMask extension which provides access to a remote Ethereum node.
+
+As such, _this portal is useless without MetaMask_ and MetaMask must be connected (via a call to `ethereum.enable()`) prior to any data being displayed.
+
+This brings up a few points to note:
+
+1. Not having MetaMask installed should be treated as an error state, with a special page prompting the user to install the extension, or otherwise use a web3 browser.
+1. On or just after page load, the `Gov` instance should be created. A call to [`gov.init()`](#govinit) handles the MetaMask connection, and prompts the user to grant site access. _The `gov.init()` call should not be made automatically,_ but instead should be triggered by the user clicking "connect to MetaMask" in the top nav bar.
+1. Browser compatibility should also be handled. The only supported browsers are Chrome and Brave, unless a `window.ethereum` object is detected, in which case it can be assumed to be a compatible dApp browser.
+
+_More details on `gov` initialization are included in the description and documentation sections._
 
 # Description
+
+This section contains the "meat" of the specification, with diagrams from [the sketch file](./governance.sketch) and annotations
+
+## Overview
+
+![Main page/overview state](#) <!-- https://sketch.cloud/s/VvZQ8/a/R4ZbmW -->
+
+- This is the home/index page of the governance portal, which should be displayed prior to MetaMask connection
+- The "Connect to MetaMask" button in the top-left nav-bar should trigger a call to [`gov.init()`](#govinit) which will prompt the user to allow the site access to their MetaMask `coinbase` account.
 
 # Documentation
 
 - Below is the README for `@kosu/gov-portal-helper` package.
 - The published package may be found [on the NPM registry](https://www.npmjs.com/package/@kosu/gov-portal-helper).
-- For safety from `number` precision issues, most numerical values are expected and returned as [`BigNumber`](https://github.com/MikeMcl/bignumber.js) instances, so be sure to be familiar with that API.
+- For safety from `number` precision issues, most numerical values are expected and returned as [`BigNumber`](https://github.com/MikeMcl/bignumber.js) instances, so be sure to be familiar with [that API](http://mikemcl.github.io/bignumber.js/).
 
 ## `@kosu/gov-portal-helper`
 
