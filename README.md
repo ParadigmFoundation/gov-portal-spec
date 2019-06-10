@@ -176,14 +176,14 @@ _The screenshots in this section are cropped from the same overview state, found
     - **Vote power** is a percentage indicating a given validators influence and power during consensus.
     - **Uptime** is a percentage representing how many blocks the validator has signed compared to how many they should have signed, if they were online all the time. This value for now should be populated as "N/A" for each listing. Eventually, this value will be loaded from a remote RPC API.
     - **Age** is simply how long a given validator has been confirmed in the registry (displayed in human units of time, even though the value is represented as a block number).
-- For each validator (each `validator` in `gov.validators`), the fields described above should be loaded/computed as follows.
-  - **Address** should be the Ethereum address loaded from `validator.owner`, and can be displayed as a "hyphenated" hex string.
-  - **Stake** should be loaded from `validator.stakeSize` (which is a `BigNumber`) and converted to units of ether prior to being displayed.
-  - **Daily reward** should be loaded from `validator.dailyReward`, a `BigNumber` instance, and converted to units of ether prior to being displayed.
-  - **Vote power** should be loaded from `validator.power` which is a `BigNumber` instance with a value between 0 and 100. The decimal value should be truncated so as to not display too many decimals. This truncation can be done based on space, or a fixed number of significant digits. Keep in mind, a validator may have less than 1% vote power.
-  - **Uptime** is not a real value at this time, and should be displayed as "N/A" for each listing.
-  - **Age** should be computed based on `validator.confirmationUnix` which is the Unix timestamp in seconds that the validator was confirmed. The "Age" value should display the number of days, hours, and minutes since this time.
-- Clicking on a validator entry (one of the rows) should take the user to the validator detail page for that listing (described in a later section).
+  - For each validator (each `validator` in `gov.validators`), the fields described above should be loaded/computed as follows.
+    - **Address** should be the Ethereum address loaded from `validator.owner`, and can be displayed as a "hyphenated" hex string.
+    - **Stake** should be loaded from `validator.stakeSize` (which is a `BigNumber`) and converted to units of ether prior to being displayed.
+    - **Daily reward** should be loaded from `validator.dailyReward`, a `BigNumber` instance, and converted to units of ether prior to being displayed.
+    - **Vote power** should be loaded from `validator.power` which is a `BigNumber` instance with a value between 0 and 100. The decimal value should be truncated so as to not display too many decimals. This truncation can be done based on space, or a fixed number of significant digits. Keep in mind, a validator may have less than 1% vote power.
+    - **Uptime** is not a real value at this time, and should be displayed as "N/A" for each listing.
+    - **Age** should be computed based on `validator.confirmationUnix` which is the Unix timestamp in seconds that the validator was confirmed. The "Age" value should display the number of days, hours, and minutes since this time.
+  - Clicking on a validator entry (one of the rows) should take the user to the validator detail page for that listing (described in a later section).
 
 ### Past challenges
 
