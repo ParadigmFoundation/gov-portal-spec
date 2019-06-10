@@ -82,38 +82,47 @@ This section contains the "meat" of the specification, with diagrams from [the s
 - After a successful (no exceptions) call to [`gov.init()`](#govinit), data for the main page can be loaded.
 - After initialization, the `gov` instance will begin to load validators, challenges, and proposals, into its state.
 - Each time a new proposal, challenge, or validator is loaded, the `gov_update` event will be emitted from `gov.ee`.
-- The raw map (object) for each of the following sections can then be loaded from the `gov` instance.
-  - **Active proposals** should be loaded from `gov.proposals` (either by directly viewing that object, or a call to [`gov.currentProposals()`](#govcurrentproposals--mapproposal)).
-    - Be sure to see the [`Proposal` type definition](#proposal) as well, which defines each object in the `gov.proposals` map.
-    - Proposals on the main page display several values, which can be loaded (or computed) from each proposal object.
-    - The number ("#12", "#11", etc.) is not directly included in each `gov.proposals` property, but can be displayed based on the index of each (index of the keys).
-    - The "new proposal" or "ending soon" badges should be displayed based on the `proposal.acceptUnix` field:
-      - If `acceptUnix` is within one day of the current timestamp, "ending soon" should be displayed on the listing.
-      - If `acceptUnix` is more than one week in the future, "new proposal" should be displayed on the listing.
-      - If `acceptUnix` is less than a week in the future, but more than a day, no badge should be displayed.
-    - The title for a proposal is "Entity `x` wants to become a validator," and the `x` should be replaced with a shortened hex-string of the `proposal.owner` Ethereum address (`0x23ba...d2f`, for example).
-    - The "Stake size" field should be loaded from `proposal.stakeSize`, and should be converted to units of ether prior to being displayed.
-    - The "Daily reward" field should be loaded from `proposal.dailyReward` and should be converted to units of ether period to being displayed. Decimals can be truncated after 6-8 significant digits.
-    - The "Estimated vote power" field should be loaded from `proposal.power`, which is a decimal number from 0-100 indicating a percentage of network vote power. The decimals can be truncated after a few significant digits, based on aesthetics/spacing.
-    - The "Proposal ends in:" field must be computed based on the `proposal.acceptUnix` field, which indicates the Unix timestamp at which the proposal is confirmed. I recommend constructing a `Date` object from the timestamp, and using its methods to compute days, hours, and minutes. Seconds should not be shown, as the timestamp is purely an estimate.
-  - **Active challenges** should be loaded from `gov.challenges` (either by directly viewing that object, or a call to [`gov.currentChallenges()`](#govcurrentchallenges--mapstorechallenge)).
-    - Be sure to see the [`StoreChallenge` type definition](#storechallenge) as well, which defines each object in the `gov.challenges` map.
-    - Challenges on the main page display a number, or index, which corresponds to the underlying `pollId` used to track that challenge in the contract system.
-    - The number for each active challenge should be loaded from each `challenge.challengeId` and displayed (after conversion).
-    - The "new challenge" or "ending soon" badge should be displayed on a challenge card, based on `challenge.challengeEndUnix`:
-      - If `challengeEndUnix` is within a day of the current timestamp, "ending soon" should be displayed.
-      - If `challengeEndUnix` is equal to or more than one week away, "new challenge" should be displayed.
-      - If `challengeEndUnix` is in less than a week, but more than a day away, no badge should be displayed.
-    - The "Challenger stake" field should be loaded from `challenge.challengerStake` and displayed after conversion to units of ether.
-    - The "Potential reward" field must be computed based on the value of `challenge.challengerStake`:
-      - The maximum possible reward refers to the proportion of listing/challenger stake that could be rewarded to participating voters.
-      - This value is based on a variable contract parameter, but for now, can be _assumed to be 30% of the `challengerStake`_.
-      - Keep in mind `challenge.challengerStake` is an instance of `BigNumber`, so the appropriate methods must be used to calculate `0.3 * challengerStake`.
-    - The "Challenge ends in:" field should be computed, much like the "Proposal ends in:" field above, from each `challenge.challengeEndUnix` value which is the estimated Unix timestamp (in seconds) that the challenge will end.
-    - The displayed countdown should only be precise to the minute, as the provided timestamp is simply an estimation.
-    - The "View" button on each card should bring the user to the detail page for that challenge (discussed in a further section).
-  - **Validators** should be loaded from `gov.validators` (either by directly viewing that object, or a call to [`gov.currentValidators()`](#govcurrentvalidators--mapvalidator)).
-    - Be sure to see the [`Validator` type definition](#validator) as well, which defines each object in the `gov.validators` map.
+- The raw map (object) for each of the following sub-sections can then be loaded from the `gov` instance.
+
+### Active proposals
+
+- **Active proposals** should be loaded from `gov.proposals` (either by directly viewing that object, or a call to [`gov.currentProposals()`](#govcurrentproposals--mapproposal)).
+  - Be sure to see the [`Proposal` type definition](#proposal) as well, which defines each object in the `gov.proposals` map.
+  - Proposals on the main page display several values, which can be loaded (or computed) from each proposal object.
+  - The number ("#12", "#11", etc.) is not directly included in each `gov.proposals` property, but can be displayed based on the index of each (index of the keys).
+  - The "new proposal" or "ending soon" badges should be displayed based on the `proposal.acceptUnix` field:
+    - If `acceptUnix` is within one day of the current timestamp, "ending soon" should be displayed on the listing.
+    - If `acceptUnix` is more than one week in the future, "new proposal" should be displayed on the listing.
+    - If `acceptUnix` is less than a week in the future, but more than a day, no badge should be displayed.
+  - The title for a proposal is "Entity `x` wants to become a validator," and the `x` should be replaced with a shortened hex-string of the `proposal.owner` Ethereum address (`0x23ba...d2f`, for example).
+  - The "Stake size" field should be loaded from `proposal.stakeSize`, and should be converted to units of ether prior to being displayed.
+  - The "Daily reward" field should be loaded from `proposal.dailyReward` and should be converted to units of ether period to being displayed. Decimals can be truncated after 6-8 significant digits.
+  - The "Estimated vote power" field should be loaded from `proposal.power`, which is a decimal number from 0-100 indicating a percentage of network vote power. The decimals can be truncated after a few significant digits, based on aesthetics/spacing.
+  - The "Proposal ends in:" field must be computed based on the `proposal.acceptUnix` field, which indicates the Unix timestamp at which the proposal is confirmed. I recommend constructing a `Date` object from the timestamp, and using its methods to compute days, hours, and minutes. Seconds should not be shown, as the timestamp is purely an estimate.
+
+### Active challenges
+
+- **Active challenges** should be loaded from `gov.challenges` (either by directly viewing that object, or a call to [`gov.currentChallenges()`](#govcurrentchallenges--mapstorechallenge)).
+  - Be sure to see the [`StoreChallenge` type definition](#storechallenge) as well, which defines each object in the `gov.challenges` map.
+  - Challenges on the main page display a number, or index, which corresponds to the underlying `pollId` used to track that challenge in the contract system.
+  - The number for each active challenge should be loaded from each `challenge.challengeId` and displayed (after conversion).
+  - The "new challenge" or "ending soon" badge should be displayed on a challenge card, based on `challenge.challengeEndUnix`:
+    - If `challengeEndUnix` is within a day of the current timestamp, "ending soon" should be displayed.
+    - If `challengeEndUnix` is equal to or more than one week away, "new challenge" should be displayed.
+    - If `challengeEndUnix` is in less than a week, but more than a day away, no badge should be displayed.
+  - The "Challenger stake" field should be loaded from `challenge.challengerStake` and displayed after conversion to units of ether.
+  - The "Potential reward" field must be computed based on the value of `challenge.challengerStake`:
+    - The maximum possible reward refers to the proportion of listing/challenger stake that could be rewarded to participating voters.
+    - This value is based on a variable contract parameter, but for now, can be _assumed to be 30% of the `challengerStake`_.
+    - Keep in mind `challenge.challengerStake` is an instance of `BigNumber`, so the appropriate methods must be used to calculate `0.3 * challengerStake`.
+  - The "Challenge ends in:" field should be computed, much like the "Proposal ends in:" field above, from each `challenge.challengeEndUnix` value which is the estimated Unix timestamp (in seconds) that the challenge will end.
+  - The displayed countdown should only be precise to the minute, as the provided timestamp is simply an estimation.
+  - The "View" button on each card should bring the user to the detail page for that challenge (discussed in a further section).
+
+### Validators
+
+- **Validators** should be loaded from `gov.validators` (either by directly viewing that object, or a call to [`gov.currentValidators()`](#govcurrentvalidators--mapvalidator)).
+- Be sure to see the [`Validator` type definition](#validator) as well, which defines each object in the `gov.validators` map.
 
 # Documentation
 
