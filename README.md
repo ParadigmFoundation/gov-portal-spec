@@ -74,7 +74,7 @@ This section contains the "meat" of the specification, with diagrams from [the s
 
 ## Main page (pre-MetaMask connection)
 
-![Main page/overview state](#) <!-- https://sketch.cloud/s/VvZQ8/a/R4ZbmW -->
+![Main page/overview state](./images/gov-load-state.png) <!-- https://sketch.cloud/s/VvZQ8/a/R4ZbmW -->
 
 - This is the home/index page of the governance portal, which should be displayed prior to MetaMask connection
 - The "Connect to MetaMask" button in the top-right nav-bar should trigger a call to [`gov.init()`](#govinit) which will prompt the user to allow the site access to their MetaMask `coinbase` account.
@@ -103,6 +103,10 @@ This section contains the "meat" of the specification, with diagrams from [the s
 
 ## Main page (post-MetaMask connection)
 
+_The screenshots in this section are cropped from the same overview state, found [here](./images/gov-connected-main.png)._
+
+![Main page/overview state (connected)](./images/gov-connected-nav-bar.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
+
 - After a successful (no exceptions) call to [`gov.init()`](#govinit), data for the main page can be loaded.
   - This call should be triggered by the user clicking "connect to MetaMask".
 - The users balance of KOSU tokens should be displayed in the top-right nav par, next to their address.
@@ -118,6 +122,8 @@ This section contains the "meat" of the specification, with diagrams from [the s
 - The raw map (object) for each of the following sub-sections can then be loaded from the `gov` instance.
 
 ### Active proposals
+
+![Main page: active proposals](./images/gov-active-proposals.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
 
 - **Active proposals** should be loaded from `gov.proposals` (either by directly viewing that object, or a call to [`gov.currentProposals()`](#govcurrentproposals--mapproposal)).
   - Be sure to see the [`Proposal` type definition](#proposal) as well, which defines each object in the `gov.proposals` map.
@@ -138,6 +144,8 @@ This section contains the "meat" of the specification, with diagrams from [the s
 
 ### Active challenges
 
+![Main page: active challenges](./images/gov-active-challenges.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
+
 - **Active challenges** should be loaded from `gov.challenges` (either by directly viewing that object, or a call to [`gov.currentChallenges()`](#govcurrentchallenges--mapstorechallenge)).
   - Be sure to see the [`StoreChallenge` type definition](#storechallenge) as well, which defines each object in the `gov.challenges` map.
   - Challenges on the main page display a number, or index, which corresponds to the underlying `pollId` used to track that challenge in the contract system.
@@ -157,6 +165,8 @@ This section contains the "meat" of the specification, with diagrams from [the s
 
 ### Validators
 
+![Main page: validators table](./images/gov-validators-table.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
+
 - **Validators** should be loaded from `gov.validators` (either by directly viewing that object, or a call to [`gov.currentValidators()`](#govcurrentvalidators--mapvalidator)).
   - Be sure to see the [`Validator` type definition](#validator) as well, which defines each object in the `gov.validators` map.
   - The validators table has the following column headers:
@@ -174,6 +184,65 @@ This section contains the "meat" of the specification, with diagrams from [the s
   - **Uptime** is not a real value at this time, and should be displayed as "N/A" for each listing.
   - **Age** should be computed based on `validator.confirmationUnix` which is the Unix timestamp in seconds that the validator was confirmed. The "Age" value should display the number of days, hours, and minutes since this time.
 - Clicking on a validator entry (one of the rows) should take the user to the validator detail page for that listing (described in a later section).
+
+### Past challenges
+
+![Main page: validators table](./images/gov-past-challenges-table.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
+
+- **Past challenges** is a section containing a table with information about past challenges and the results of each.
+
+  - Be sure to be familiar with the [`PastChallenge`](#PastChallenge) and [`ListingSnapshot`](#ListingSnapshot) types.
+  - Past challenges are stored and loaded separately from the primary `gov` properites (`proposals`, `challenges`, and `validators`) and are not updated in real time.
+
+    - Instead, past challenges must be loaded by calling [`gov.getHistoricalChallenges()`](#govgethistoricalchallenges--promisearraypastchallenge):
+
+      ```javascript
+      // following requires `gov.init()` to have completed successfully
+      const pastChallenges = await gov.getHistoricalChallenges();
+
+      // the number of challenges (use index +1 to display under "ID")
+      console.log(pastChallenges.length);
+      ```
+
+- The "Past Challenges" table has the following column headers:
+  - **ID** is the challenge's unique ID, which increments from 0.
+  - **Challenger** is the Ethereum address of the entity that initiated the challenge.
+  - **Type** indicates weather the challenge was against an active "validator" or against a pending "proposal".
+  - **Result** indicates the result of the challenge, where "accepted" indicates the challenge won, and "rejected" indicates the challenge failed/lost.
+  - **Tokens at Stake** is the total number of tokens at stake during the challenge, equal to the challenge stake plus the listing owner's stake (see below).
+  - **Time** indicates the time a given challenge ended (vote period ends).
+- For each table entry (loaded from the array returned by [`gov.getHistoricalChallenges()`](#govgethistoricalchallenges-⇒-promisearraypastchallenge)) and each column field above:
+
+  - **ID** can be loaded from `challenge.listingSnapshot.currentChallenge` or can be loaded from the challenge's index within the array returned by `getHistoricalChallenges`.
+  - **Challenger** should be loaded from `challenge.challenger` (an Ethereum address).
+  - **Type** is computed based on `challenge.listingSnapshot.status` based on the following:
+    - If `listingSnapshot.status === 1`, "Type" should be "Proposal" (blue).
+    - If `listingSnapshot.status === 2`, "Type" should be "Validator" (orange).
+    - If `listingSnapshot.status` is **not** `1` or `2`, _that entry should not be displayed._
+  - **Result** should be based off the boolean `challenge.passed` field:
+    - If `challenge.passed === true` then "Result" should be "Accepted" (green).
+    - If `challenge.passed === false` then "Result" should be "Rejected" (red).
+  - **Tokens at Stake** should be computed as the sum of `challenge.balance` and `challenge.listingSnapshot.stakedBalance` and displayed in units of ether.
+    - Keep in mind both `challenge.balance` and `challenge.listingSnapshot.stakedBalance` are `BigNumber` instances, and stored in units of wei which must be converted prior to displaying.
+  - **Time** should be calculated based on the timestamp of the `challenge.challengeEnd` block number.
+
+    - This timestamp can be loaded from the [`gov.getPastBlockTimestamp(n)`](#govgetpastblocktimestampblocknumber--promisenumber) method, where `n` is passed in as `challenge.challengeEnd`.
+    - For example:
+
+      ```javascript
+      // gov.init() must have completed successfully prior to this working
+      for (let i = 0; i < challenges.length; i++) {
+        const challenge = challenges[i];
+        const challengeEndBlock = challenge.challengeEnd.toNumber();
+
+        // use this value to display "Time"
+        const challengeEndTimestamp = await gov.getPastBlockTimestamp(
+          challengeEndBlock
+        );
+      }
+      ```
+
+- Clicking on a challenge should take to a past challenge detail page for that challenge (discused in a later section).
 
 # Documentation
 
