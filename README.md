@@ -58,13 +58,15 @@ This brings up a few points to note:
 
 _More details on `gov` initialization are included in the description and documentation sections._
 
-## Wei vs. Ether
+## Units: wei vs. ether
 
 Most token values (stake size, reward rate, etc.) are showed in "base units" of the token, which are also refereed to as `wei`, the smallest unit of most ERC-20 tokens. Becuase wei amounts will have between ~17-23 digits, amounts should be converted to ether prior to being displayed to the user.
 
 A `gov` instance provides [`gov.weiToEther(wei)`](#govweitoetherwei--string) to convert from wei, and [`gov.etherToWei(ether)`](#govethertoweiether--string) to convert the other direction.
 
 _These values are returned as strings, and should be converted to `BigNumber` instances where necessary. The static method `Gov.BigNumber` may be used to create new `BigNumber` instances from strings._
+
+_Also note that "Ether" (proper noun) refers to the Ether cryptocurrency of the Ethereum network, while "ether" (lowercase) refers to the unit of 1\*10^18 wei._
 
 # Description
 
@@ -76,10 +78,41 @@ This section contains the "meat" of the specification, with diagrams from [the s
 
 - This is the home/index page of the governance portal, which should be displayed prior to MetaMask connection
 - The "Connect to MetaMask" button in the top-right nav-bar should trigger a call to [`gov.init()`](#govinit) which will prompt the user to allow the site access to their MetaMask `coinbase` account.
+- Various exceptions (as promise rejections) from `gov.init()` indicate various failure states:
+  ```javascript
+  // init life-cycle (example only)
+  (async () => {
+    const gov = new Gov();
+    try {
+      await gov.init();
+    } catch (error) {
+      switch (error.message) {
+        case "user denied site access":
+          /* user clicked "reject" on MM prompt */
+          break;
+        case "non-ethereum browser detected":
+          /* incompatible browser */
+          break;
+        default: {
+          /* normal failure case, something unexpected went wrong */
+        }
+      }
+    }
+  })();
+  ```
 
 ## Main page (post-MetaMask connection)
 
 - After a successful (no exceptions) call to [`gov.init()`](#govinit), data for the main page can be loaded.
+  - This call should be triggered by the user clicking "connect to MetaMask".
+- The users balance of KOSU tokens should be displayed in the top-right nav par, next to their address.
+  - The user's address is stored as `gov.coinbase` (after `init` has completed).
+  - The user's Kosu balance can be loaded (as a `BigNumber`, units of wei) with the following code:
+    ```javascript
+    // the following requires `gov.init()` to have completed successfully
+    const coinbase = gov.coinbase;
+    const balance = await gov.kosu.kosuToken.balanceOf(coinbase);
+    ```
 - After initialization, the `gov` instance will begin to load validators, challenges, and proposals, into its state.
 - Each time a new proposal, challenge, or validator is loaded, the `gov_update` event will be emitted from `gov.ee`.
 - The raw map (object) for each of the following sub-sections can then be loaded from the `gov` instance.
@@ -89,16 +122,19 @@ This section contains the "meat" of the specification, with diagrams from [the s
 - **Active proposals** should be loaded from `gov.proposals` (either by directly viewing that object, or a call to [`gov.currentProposals()`](#govcurrentproposals--mapproposal)).
   - Be sure to see the [`Proposal` type definition](#proposal) as well, which defines each object in the `gov.proposals` map.
   - Proposals on the main page display several values, which can be loaded (or computed) from each proposal object.
-  - The number ("#12", "#11", etc.) is not directly included in each `gov.proposals` property, but can be displayed based on the index of each (index of the keys).
+  - The titular hex string for each proposal card should be the key for the proposal in the `gov.proposals` object. This value is the public key for the listing application, encoded as a hex string.
   - The "new proposal" or "ending soon" badges should be displayed based on the `proposal.acceptUnix` field:
     - If `acceptUnix` is within one day of the current timestamp, "ending soon" should be displayed on the listing.
     - If `acceptUnix` is more than one week in the future, "new proposal" should be displayed on the listing.
     - If `acceptUnix` is less than a week in the future, but more than a day, no badge should be displayed.
-  - The title for a proposal is "Entity `x` wants to become a validator," and the `x` should be replaced with a shortened hex-string of the `proposal.owner` Ethereum address (`0x23ba...d2f`, for example).
+  - The title for a proposal is "`X` wants to become a validator," and the `X` should be replaced with a shortened hex-string of the `proposal.owner` Ethereum address (`0x23ba...d2f`, for example).
+    - Note that this hex string is 20 bytes (an Ethereum address, 42 chars with the "0x" prefix) and the listing key is a 32 byte (66 char with the "0x" prefix) Tendermint public key.
+    - That is to say `proposal.owner` strictly is NOT EQUAL to the key of the object within the mapping.
   - The "Stake size" field should be loaded from `proposal.stakeSize`, and should be converted to units of ether prior to being displayed.
   - The "Daily reward" field should be loaded from `proposal.dailyReward` and should be converted to units of ether period to being displayed. Decimals can be truncated after 6-8 significant digits.
   - The "Estimated vote power" field should be loaded from `proposal.power`, which is a decimal number from 0-100 indicating a percentage of network vote power. The decimals can be truncated after a few significant digits, based on aesthetics/spacing.
   - The "Proposal ends in:" field must be computed based on the `proposal.acceptUnix` field, which indicates the Unix timestamp at which the proposal is confirmed. I recommend constructing a `Date` object from the timestamp, and using its methods to compute days, hours, and minutes. Seconds should not be shown, as the timestamp is purely an estimate.
+  - The "View" button should take the user to the detail page for the proposal (detailed in a later section).
 
 ### Active challenges
 
@@ -122,7 +158,22 @@ This section contains the "meat" of the specification, with diagrams from [the s
 ### Validators
 
 - **Validators** should be loaded from `gov.validators` (either by directly viewing that object, or a call to [`gov.currentValidators()`](#govcurrentvalidators--mapvalidator)).
-- Be sure to see the [`Validator` type definition](#validator) as well, which defines each object in the `gov.validators` map.
+  - Be sure to see the [`Validator` type definition](#validator) as well, which defines each object in the `gov.validators` map.
+  - The validators table has the following column headers:
+    - **Address** is the Ethereum address of a given validator.
+    - **Stake** is the validator Kosu token stake size, displayed in ether units.
+    - **Daily reward** is the estimated number of tokens minted to the validator per day (in units of ether).
+    - **Vote power** is a percentage indicating a given validators influence and power during consensus.
+    - **Uptime** is a percentage representing how many blocks the validator has signed compared to how many they should have signed, if they were online all the time. This value for now should be populated as "N/A" for each listing. Eventually, this value will be loaded from a remote RPC API.
+    - **Age** is simply how long a given validator has been confirmed in the registry (displayed in human units of time, even though the value is represented as a block number).
+- For each validator (each `validator` in `gov.validators`), the fields described above should be loaded/computed as follows.
+  - **Address** should be the Ethereum address loaded from `validator.owner`, and can be displayed as a "hyphenated" hex string.
+  - **Stake** should be loaded from `validator.stakeSize` (which is a `BigNumber`) and converted to units of ether prior to being displayed.
+  - **Daily reward** should be loaded from `validator.dailyReward`, a `BigNumber` instance, and converted to units of ether prior to being displayed.
+  - **Vote power** should be loaded from `validator.power` which is a `BigNumber` instance with a value between 0 and 100. The decimal value should be truncated so as to not display too many decimals. This truncation can be done based on space, or a fixed number of significant digits. Keep in mind, a validator may have less than 1% vote power.
+  - **Uptime** is not a real value at this time, and should be displayed as "N/A" for each listing.
+  - **Age** should be computed based on `validator.confirmationUnix` which is the Unix timestamp in seconds that the validator was confirmed. The "Age" value should display the number of days, hours, and minutes since this time.
+- Clicking on a validator entry (one of the rows) should take the user to the validator detail page for that listing (described in a later section).
 
 # Documentation
 
