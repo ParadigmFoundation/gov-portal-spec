@@ -8,7 +8,7 @@ A custom helper library (`gov-portal-helper`) has been created to assist with th
 
 # Background
 
-Conceptual topics helpful for working with this project, beyond the assumed knowledge of basic Ethereum topics.
+Conceptually helpful topics and other background info required to work with this project. This document assumes familiarity with basic Ethereum concepts such as contracts, signatures, transactions, `web3.js`, providers, and MetaMask.
 
 ## Token curated registry
 
