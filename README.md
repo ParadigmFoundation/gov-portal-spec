@@ -418,7 +418,33 @@ _Be sure to catch promise rejections from `gov.revealVote` in the case that the 
 
 ### Past validator challenge
 
-![Historical challenges: validator](./images/gov-past-challenge-validator.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
+![Historical challenges: validator](./images/gov-past-challenge-validator.png)
+
+- A historical (resolved) challenge against a validator.
+- Display orange "validator" badge at top if `challenge.listingSnapshot.status === 2` (if `1`, it is a past challenge against a proposal, see below). 
+- The outcome of the challenge (badge underneath "Challenge #") should be:
+  - "Accepted" if `challenge.passed === true`, or
+  - "Rejected" if `challenge.passed === false`.
+- Page fields/values:
+  - **Challenge #`N`** where `N` is the ID of the challenge (its position within the array, or taken from `listingSnapshot`)
+  - **Validator `X` was ... challenged by `Y`** where X is the Ethereum address of the validator, loaded from `pastChallenge.listingSnapshot.owner` and `Y` is the challenger address, loaded from `pastChallenge.challenger`.
+  - **Stake size** should be loaded from `challenge.balance` and displayed in units of ether.
+  - **Daily reward** should be computed based on `challenge.listingSnapshot.rewardRate`:
+    ```javascript
+    // this value will be a `BigNumber` in units of wei (convert before displaying)
+    const dailyReward = gov._estimateDailyReward(challenge.listingSnapshot.rewardRate);
+    ```
+  - **Results:**
+    - Based on `challenge.passed`, we can assume which side has the majority of tokens. 
+    - The value for the majority (winning) outcome can be loaded from `challenge.winningTokens`.
+    - The minority (losing) value can be computed as the difference between `challenge.voterTotal` and `challenge.winningTokens`.
+  - Button: **Go back** should bring the user back to the main page.
+
+### Past proposal challenge
+
+![Historical challenges: proposal](./images/gov-past-challenge-proposal.png)
+
+- The logic and values for this state are identical to the one above (past challenge against a validator), except that the badge underneath "Challenge #" shows a blue "proposal", rather than orange "validator".
 # Documentation
 
 - Below is the README for `@kosu/gov-portal-helper` package.
