@@ -354,14 +354,17 @@ _This state shows a challenge during the commit phase._
 
 ### Confirm vote
 
-![Challenge detail page: confirm commit vote](./images/gov-challenge-confirm-vote.png)
+![Challenge detail page: confirm commit vote](./images/gov-challenge-vote-box.png)
 
 - During the commit period, users may vote to remove or vote to keep (both challenges and proposals).
-- Clicking either vote option prompts for another confirmation.
+- Clicking either vote option prompts for another confirmation (displayed above).
 - Subsequent confirmation should trigger the following logic:
   ```javascript
-  const tokensToCommit; // load from user (keep in mind wei conversion), should be a `BigNumber`
-  const challengeId;    // load from challenge page, should be `BigNumber`
+  // load from user input box, displayed above (keep in mind wei conversion), should be a `BigNumber`
+  const tokensToCommit; 
+
+  // load from challenge page, should be `BigNumber`
+  const challengeId;
 
   /**
    * Vote "value" is a string, either "1" or "0":
