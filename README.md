@@ -71,7 +71,7 @@ _Also note that "Ether" (proper noun) refers to the Ether cryptocurrency of the 
 
 # Description
 
-This section contains the "meat" of the specification, with diagrams from [the sketch file](./governance.sketch) and annotations
+This section contains the "meat" of the specification, with diagrams from [the sketch file](./governance.sketch) and annotations.
 
 ## Main page (pre-MetaMask connection)
 
