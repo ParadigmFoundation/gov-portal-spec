@@ -29,6 +29,7 @@ The resulting vote on the challenge ends either with the challenge passing, in w
 - **Voter:** an entity who is participating in a _challenge_ vote by committing their own tokens to one side of the poll (note, a voter may never loose their tokens if they vote on the losing side, they can only benefit if they win).
 - **Stake:** a term used to describe A) an amount of tokens that may be lost in certain outcomes, or B) the act of committing tokens into a _staked_ position.
 - **ValidatorRegistry:** the specific Ethereum contract that implements the functionality of this governance system within the greater Kosu protocol.
+- **Tendermint public key:** (also just "public key") each Kosu validator has a validating key pair, and their public key is used to identify them within the contract system. Each primary state field (`gov.validators`, etc.) is a mapping of these public keys to objects with data about those listings/challenges.
 
 ## Governance portal helper state/event model
 
