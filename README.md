@@ -387,6 +387,10 @@ _This state shows a challenge during the commit phase._
 - This state should be shown after a successful commit vote transaction (above).
 - For now, "account page" should be a null link (`#`).
 - The "Add a reminder" link should use the Google Calendar URL API to create an event (see [example](https://github.com/decomaan/google-calendar-link-generator/blob/master/app/js/app.js)).
+- An example of a GET request that prompts the user to create an event (copy/paste to browser to try):
+  ```
+  https://www.google.com/calendar/render?action=TEMPLATE&text=Reveal+vote+on+challenge+%233&details=During+the+reveal+period%2C+you+may+reveal+your+vote+on+this+challenge.+If+you+do+not+reveal+a+vote%2C+you+will+not+be+rewarded+if+you+voted+on+the+winning+side.&location=gov.kosu.io&dates=20190613T162100Z%2F20190614T162100Z
+  ```
 - The event can be created for the duration of the "reveal period" which can be calculated as follows:
   ```javascript
   const challengeStart = challenge.challengeEnd - gov.params.challengePeriod;
