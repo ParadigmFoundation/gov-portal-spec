@@ -408,6 +408,17 @@ _This state shows a challenge during the commit phase._
   const revealTxId = await gov.revealVote(challengeId);
   ```
 _Be sure to catch promise rejections from `gov.revealVote` in the case that the user did not commit a vote from the same browser._
+
+## Historical challenges
+
+![Historical challenges: table](./images/gov-past-challenges-table.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
+
+- Each historical (past) challenge will have a detail page, hyperlinked from the table shown above.
+- A historical challenge can be either against a "proposal" or against a "validator, and in both cases, the challenge can fail or pass. 
+
+### Past validator challenge
+
+![Historical challenges: validator](./images/gov-past-challenge-validator.png) <!-- https://sketch.cloud/s/VvZQ8/a/j0dowG -->
 # Documentation
 
 - Below is the README for `@kosu/gov-portal-helper` package.
